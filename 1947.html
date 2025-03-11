@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KirCoin</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #00aaff, #005577);
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #logo {
+            width: 150px;
+        }
+        .button {
+            background-color: #0077cc;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+        #shop, #top, #register, #auth {
+            margin-top: 20px;
+        }
+        #balance {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <img id="logo" src="hamster.jpg" alt="Logo">
+    <h1>KirCoin</h1>
+    <div id="balance">Баланс: 0</div>
+    <button class="button" id="clickButton">Кликни на хомяка!</button>
+    <button class="button" id="shopButton">Магазин</button>
+    <button class="button" id="diceButton">Играть в кубик</button>
+    
+    <div id="shop" style="display:none;">
+        <h2>Магазин</h2>
+        <button class="button" id="buyClickUpgrade">Купить уровень клика</button>
+        <button class="button" id="buyEarningUpgrade">Купить уровень заработка</button>
+    </div>
+    
+    <div id="top" style="display:none;">
+        <h2>Топ игроков</h2>
+        <div id="leaderboard"></div>
+    </div>
+    
+    <div id="register" style="display:none;">
+        <h2>Регистрация</h2>
+        <input type="email" id="regEmail" placeholder="Почта">
+        <input type="password" id="regPassword" placeholder="Пароль">
+        <button class="button" id="registerButton">Зарегистрироваться</button>
+    </div>
+    
+    <div id="auth" style="display:none;">
+        <h2>Авторизация</h2>
+        <input type="email" id="authEmail" placeholder="Почта">
+        <input type="password" id="authPassword" placeholder="Пароль">
+        <button class="button" id="authButton">Войти</button>
+    </div>
+
+    <p>Сделано с любовью Кирилл Дементьев</p>
+
+    <script>
+        let clicks = 0;
+        let balance = 0;
+        let clickUpgradeCost = 10;
+        let earningUpgradeCost = 20;
+
+        document.getElementById('clickButton').onclick = function() {
+            clicks++;
+            balance++;
+            updateDisplay();
+        };
+
+        document.getElementById('shopButton').onclick = function() {
+            document.getElementById('shop').style.display = 'block';
+        };
+
+        document.getElementById('diceButton').onclick = function() {
+            playDice();
+        };
+
+        document.getElementById('buyClickUpgrade').onclick = function() {
+            if (balance >= clickUpgradeCost) {
+                balance -= clickUpgradeCost;
+                clickUpgradeCost *= 2;
+                updateDisplay();
+            }
+        };
+
+        document.getElementById('buyEarningUpgrade').onclick = function() {
+            if (balance >= earningUpgradeCost) {
+                balance -= earningUpgradeCost;
+                earningUpgradeCost *= 2;
+                updateDisplay();
+            }
+        };
+
+        function playDice() {
+            let attempts = 3;
+            let result = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+            alert(`Вы выиграли: ${result}`);
+            balance += result;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('balance').innerText = `Баланс: ${balance}`;
+        }
+    </script>
+</body>
+</html>
