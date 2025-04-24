@@ -4,119 +4,824 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KirCoin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+        
         body {
-            background: linear-gradient(to bottom, #00aaff, #005577);
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
+            min-height: 100vh;
         }
-        #logo {
-            width: 150px;
+        
+        .hamster-container {
+            position: relative;
+            transition: transform 0.1s;
         }
-        .button {
-            background-color: #0077cc;
-            border: none;
-            color: white;
-            padding: 15px 32px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 12px;
+        
+        .hamster-container:active {
+            transform: scale(0.95);
         }
-        #shop, #top, #register, #auth {
-            margin-top: 20px;
+        
+        .click-effect {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 255, 0, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: click-animation 0.6s forwards;
         }
-        #balance {
-            font-size: 20px;
-            margin-top: 10px;
+        
+        @keyframes click-animation {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+        
+        .dice-face {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            color: #1e3c72;
+            font-weight: bold;
+            margin: 0 auto;
+        }
+        
+        .achievement-badge {
+            animation: achievementPop 0.5s ease-out;
+        }
+        
+        @keyframes achievementPop {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #2a5298;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #4ade80;
+            transition: width 0.3s;
+        }
+        
+        /* Адаптация для мобильных устройств */
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "header"
+                    "hamster"
+                    "dice"
+                    "shop"
+                    "leaderboard";
+            }
+            
+            .hamster-area, .shop-area, .dice-area, .leaderboard-area {
+                margin-bottom: 20px;
+            }
         }
     </style>
 </head>
-<body>
-    <img id="logo" src="hamster.jpg" alt="Logo">
-    <h1>KirCoin</h1>
-    <div id="balance">Баланс: 0</div>
-    <button class="button" id="clickButton">Кликни на хомяка!</button>
-    <button class="button" id="shopButton">Магазин</button>
-    <button class="button" id="diceButton">Играть в кубик</button>
-    
-    <div id="shop" style="display:none;">
-        <h2>Магазин</h2>
-        <button class="button" id="buyClickUpgrade">Купить уровень клика</button>
-        <button class="button" id="buyEarningUpgrade">Купить уровень заработка</button>
-    </div>
-    
-    <div id="top" style="display:none;">
-        <h2>Топ игроков</h2>
-        <div id="leaderboard"></div>
-    </div>
-    
-    <div id="register" style="display:none;">
-        <h2>Регистрация</h2>
-        <input type="email" id="regEmail" placeholder="Почта">
-        <input type="password" id="regPassword" placeholder="Пароль">
-        <button class="button" id="registerButton">Зарегистрироваться</button>
-    </div>
-    
-    <div id="auth" style="display:none;">
-        <h2>Авторизация</h2>
-        <input type="email" id="authEmail" placeholder="Почта">
-        <input type="password" id="authPassword" placeholder="Пароль">
-        <button class="button" id="authButton">Войти</button>
+<body class="p-4">
+    <!-- Модальное окно ввода ника -->
+    <div id="nicknameModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gradient-to-br from-blue-800 to-blue-900 p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h2 class="text-2xl font-bold text-center mb-4">Добро пожаловать в KirCoin!</h2>
+            <p class="text-center mb-4">Введите ваш никнейм, чтобы начать игру:</p>
+            <input id="nicknameInput" type="text" class="w-full p-3 rounded-lg bg-blue-700 text-white border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4" placeholder="Ваш никнейм">
+            <button id="startGameBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105">
+                Начать игру
+            </button>
+        </div>
     </div>
 
-    <p>Сделано с любовью Кирилл Дементьев</p>
+    <!-- Основной контейнер игры -->
+    <div class="max-w-7xl mx-auto">
+        <!-- Заголовок -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center">
+                <img src="https://media.istockphoto.com/id/1068306906/vector/hamster.jpg?b=1&s=170x170&k=20&c=MvDCuOC7hP950iqfafdgrhyCibm8rjUzUaVc4a-LYjE=" alt="Логотип KirCoin" class="h-16 w-16 mr-4">
+                <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600">KirCoin</h1>
+            </div>
+            <div class="flex justify-between items-center mt-2">
+                <div id="balanceContainer" class="text-xl font-bold bg-blue-800 bg-opacity-50 px-4 py-2 rounded-lg hidden">
+                    Баланс: <span id="balance">0</span> KC
+                </div>
+                <div id="autoClickerStatus" class="text-sm bg-blue-800 bg-opacity-50 px-3 py-1 rounded-lg hidden">Авто-кликер: <span id="autoClickerPower">0</span> KC/сек</div>
+            </div>
+        </div>
+
+        <!-- Основная сетка игрового интерфейса -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 main-grid" style="grid-template-areas: 'hamster shop leaderboard' 'dice shop leaderboard';">
+            <!-- Блок хомяка -->
+            <div class="hamster-area bg-blue-900 bg-opacity-30 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-center">Кликай на хомяка!</h2>
+                <div id="hamster" class="hamster-container mx-auto w-48 h-48 cursor-pointer relative">
+                    <img src="https://media.istockphoto.com/id/1068306906/vector/hamster.jpg?b=1&s=170x170&k=20&c=MvDCuOC7hP950iqfafdgrhyCibm8rjUzUaVc4a-LYjE=" alt="Хомяк" class="w-full h-full object-contain hover:-translate-y-1 transition-transform duration-200">
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-blue-300">Кликов за сессию: <span id="sessionClicks">0</span></p>
+                    <p class="text-sm text-blue-300">Кликов в секунду: <span id="clicksPerSecond">0</span></p>
+                </div>
+            </div>
+
+            <!-- Блок игры в кубик -->
+            <div class="dice-area bg-blue-900 bg-opacity-30 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-center">Случайный заработок</h2>
+                <p class="text-center mb-4">Осталось попыток: <span id="diceAttempts">3</span></p>
+                <div id="diceResultContainer" class="mb-4">
+                    <div id="diceResult" class="dice-face">?</div>
+                </div>
+                <button id="rollDiceBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Кинуть кубик (20-40 KC)
+                </button>
+            </div>
+
+            <!-- Блок магазина -->
+            <div class="shop-area bg-blue-900 bg-opacity-30 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-center">Магазин улучшений</h2>
+                <div class="space-y-4">
+                    <!-- Улучшение клика -->
+                    <div class="p-4 bg-blue-800 bg-opacity-70 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold">Улучшить клик</h3>
+                            <span class="bg-yellow-500 text-blue-900 px-2 py-1 rounded text-sm">+1 KC за клик</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-blue-200">Уровень: <span id="clickPowerLevel">1</span></p>
+                            <p class="text-sm text-blue-200">Цена: <span id="clickPowerPrice">10</span> KC</p>
+                        </div>
+                        <button id="buyClickPowerBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Купить
+                        </button>
+                    </div>
+
+                    <!-- Авто-кликер -->
+                    <div class="p-4 bg-blue-800 bg-opacity-70 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold">Авто-кликер</h3>
+                            <span class="bg-yellow-500 text-blue-900 px-2 py-1 rounded text-sm">+1 KC/сек</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-blue-200">Уровень: <span id="autoClickerLevel">0</span></p>
+                            <p class="text-sm text-blue-200">Цена: <span id="autoClickerPrice">50</span> KC</p>
+                        </div>
+                        <button id="buyAutoClickerBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Купить
+                        </button>
+                    </div>
+
+                    <!-- Улучшение удачи -->
+                    <div class="p-4 bg-blue-800 bg-opacity-70 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold">Улучшить удачу</h3>
+                            <span class="bg-yellow-500 text-blue-900 px-2 py-1 rounded text-sm">+5 к выигрышу</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-blue-200">Уровень: <span id="luckLevel">1</span></p>
+                            <p class="text-sm text-blue-200">Цена: <span id="luckPrice">30</span> KC</p>
+                        </div>
+                        <button id="buyLuckBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Купить
+                        </button>
+                    </div>
+
+                    <!-- Улучшение скорости авто-кликера -->
+                    <div class="p-4 bg-blue-800 bg-opacity-70 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold">Скорость авто-кликера</h3>
+                            <span class="bg-yellow-500 text-blue-900 px-2 py-1 rounded text-sm">x2 скорость</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-blue-200">Уровень: <span id="clickerSpeedLevel">1</span></p>
+                            <p class="text-sm text-blue-200">Цена: <span id="clickerSpeedPrice">100</span> KC</p>
+                        </div>
+                        <button id="buyClickerSpeedBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Купить
+                        </button>
+                    </div>
+
+                    <!-- Увеличение попыток в кубике -->
+                    <div class="p-4 bg-blue-800 bg-opacity-70 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold">Доп. попытки</h3>
+                            <span class="bg-yellow-500 text-blue-900 px-2 py-1 rounded text-sm">+1 попытка</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-blue-200">Куплено: <span id="extraAttemptsCount">0</span></p>
+                            <p class="text-sm text-blue-200">Цена: <span id="extraAttemptsPrice">75</span> KC</p>
+                        </div>
+                        <button id="buyExtraAttemptsBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Купить
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Блок топа и достижений -->
+            <div class="leaderboard-area bg-blue-900 bg-opacity-30 p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Топ игроков</h2>
+                    <div id="playerRankBadge" class="bg-yellow-500 text-blue-900 px-3 py-1 rounded-full text-sm font-bold hidden">Вы: <span id="playerRank">-</span></div>
+                </div>
+                
+                <div id="leaderboard" class="mb-8">
+                    <div class="text-center py-4">
+                        <p class="text-blue-300">Загрузка топа...</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold mb-3">Ваши достижения</h3>
+                <div id="achievementsContainer" class="grid grid-cols-2 gap-2">
+                    <div class="achievement-badge bg-blue-800 bg-opacity-70 p-2 rounded-lg flex items-center">
+                        <div class="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center mr-2">
+                            <span>🏆</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold">Новичок</p>
+                            <p class="text-xs text-blue-300">Сделать 10 кликов</p>
+                            <div class="progress-bar mt-1">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Футер -->
+        <div class="mt-12 text-center text-blue-300 text-sm">
+            <p>Сделано с любовью Кирилл Дементьев</p>
+        </div>
+    </div>
+
+    <!-- Аудио элементы -->
+    <audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3"></audio>
+    <audio id="buySound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3"></audio>
+    <audio id="diceSound" src="https://assets.mixkit.co/sfx/preview/mixkit-rolling-dice-2000.mp3"></audio>
+    <audio id="winSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bonus-earned-2065.mp3"></audio>
 
     <script>
-        let clicks = 0;
+        // Игровые переменные
         let balance = 0;
-        let clickUpgradeCost = 10;
-        let earningUpgradeCost = 20;
-
-        document.getElementById('clickButton').onclick = function() {
-            clicks++;
-            balance++;
-            updateDisplay();
+        let clickPower = 1;
+        let autoClickerPower = 0;
+        let autoClickerInterval;
+        let sessionClicks = 0;
+        let clicksHistory = [];
+        let clicksPerSecond = 0;
+        let diceAttempts = 3;
+        let extraAttempts = 0;
+        let luckBonus = 0;
+        let totalEarned = 0;
+        let playerNickname = '';
+        let achievements = {
+            firstClick: false,
+            first100: false,
+            first1000: false,
+            clickMaster: false,
+            diceMaster: false,
+            autoClicker: false,
+            shopaholic: false,
+            legend: false
         };
 
-        document.getElementById('shopButton').onclick = function() {
-            document.getElementById('shop').style.display = 'block';
+        // Цены улучшений
+        const shopItems = {
+            clickPower: { level: 1, price: 10, increase: 1 },
+            autoClicker: { level: 0, price: 50, increase: 1 },
+            luck: { level: 1, price: 30, increase: 5 },
+            clickerSpeed: { level: 1, price: 100, speedMultiplier: 2 },
+            extraAttempts: { count: 0, price: 75 }
         };
 
-        document.getElementById('diceButton').onclick = function() {
-            playDice();
-        };
+        // Инициализация игры
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGame();
+            updateUI();
+            checkAchievements();
+            
+            // Обработчики событий
+            document.getElementById('startGameBtn').addEventListener('click', startGame);
+            document.getElementById('hamster').addEventListener('click', handleHamsterClick);
+            document.getElementById('rollDiceBtn').addEventListener('click', rollDice);
+            document.getElementById('buyClickPowerBtn').addEventListener('click', () => buyUpgrade('clickPower'));
+            document.getElementById('buyAutoClickerBtn').addEventListener('click', () => buyUpgrade('autoClicker'));
+            document.getElementById('buyLuckBtn').addEventListener('click', () => buyUpgrade('luck'));
+            document.getElementById('buyClickerSpeedBtn').addEventListener('click', () => buyUpgrade('clickerSpeed'));
+            document.getElementById('buyExtraAttemptsBtn').addEventListener('click', buyExtraAttempts);
+            
+            // Загрузка локальных данных
+            loadLeaderboard();
+            updateCPS();
+            setInterval(updateCPS, 1000);
+        });
 
-        document.getElementById('buyClickUpgrade').onclick = function() {
-            if (balance >= clickUpgradeCost) {
-                balance -= clickUpgradeCost;
-                clickUpgradeCost *= 2;
-                updateDisplay();
+        // Загрузка сохраненной игры
+        function loadGame() {
+            const savedGame = localStorage.getItem('kirCoinSave');
+            if (savedGame) {
+                const gameData = JSON.parse(savedGame);
+                balance = gameData.balance || 0;
+                clickPower = gameData.clickPower || 1;
+                autoClickerPower = gameData.autoClickerPower || 0;
+                shopItems.clickPower.level = gameData.shopItems?.clickPower?.level || 1;
+                shopItems.autoClicker.level = gameData.shopItems?.autoClicker?.level || 0;
+                shopItems.luck.level = gameData.shopItems?.luck?.level || 1;
+                shopItems.clickerSpeed.level = gameData.shopItems?.clickerSpeed?.level || 1;
+                shopItems.extraAttempts.count = gameData.shopItems?.extraAttempts?.count || 0;
+                diceAttempts = gameData.diceAttempts !== undefined ? gameData.diceAttempts : 3;
+                extraAttempts = gameData.extraAttempts || 0;
+                playerNickname = gameData.playerNickname || '';
+                totalEarned = gameData.totalEarned || 0;
+                achievements = gameData.achievements || achievements;
+                
+                if (playerNickname) {
+                    document.getElementById('nicknameModal').classList.add('hidden');
+                    document.getElementById('balanceContainer').classList.remove('hidden');
+                    document.getElementById('autoClickerStatus').classList.remove('hidden');
+                    document.getElementById('playerRankBadge').classList.remove('hidden');
+                }
+                
+                if (autoClickerPower > 0) {
+                    startAutoClicker();
+                }
             }
-        };
-
-        document.getElementById('buyEarningUpgrade').onclick = function() {
-            if (balance >= earningUpgradeCost) {
-                balance -= earningUpgradeCost;
-                earningUpgradeCost *= 2;
-                updateDisplay();
-            }
-        };
-
-        function playDice() {
-            let attempts = 3;
-            let result = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
-            alert(`Вы выиграли: ${result}`);
-            balance += result;
-            updateDisplay();
         }
 
-        function updateDisplay() {
-            document.getElementById('balance').innerText = `Баланс: ${balance}`;
+        // Сохранение игры
+        function saveGame() {
+            const gameData = {
+                balance,
+                clickPower,
+                autoClickerPower,
+                shopItems,
+                diceAttempts,
+                extraAttempts,
+                playerNickname,
+                totalEarned,
+                achievements
+            };
+            localStorage.setItem('kirCoinSave', JSON.stringify(gameData));
+            
+            if (playerNickname) {
+                updateLeaderboard();
+            }
+        }
+
+        // Начало игры (ввод ника)
+        function startGame() {
+            const nicknameInput = document.getElementById('nicknameInput').value.trim();
+            if (nicknameInput.length < 2 || nicknameInput.length > 15) {
+                alert('Никнейм должен быть от 2 до 15 символов');
+                return;
+            }
+            
+            playerNickname = nicknameInput;
+            document.getElementById('nicknameModal').classList.add('hidden');
+            document.getElementById('balanceContainer').classList.remove('hidden');
+            document.getElementById('autoClickerStatus').classList.remove('hidden');
+            document.getElementById('playerRankBadge').classList.remove('hidden');
+            
+            // Первое достижение
+            if (!achievements.firstClick) {
+                unlockAchievement('Первый шаг', 'Вы начали играть!', '👣');
+            }
+            
+            saveGame();
+            updateUI();
+        }
+
+        // Обработка клика по хомяку
+        function handleHamsterClick(e) {
+            playClickSound();
+            addCoins(clickPower);
+            sessionClicks++;
+            
+            // Анимация клика
+            createClickEffect(e.clientX, e.clientY);
+            
+            // Обновление статистики
+            clicksHistory.push(Date.now());
+            updateCPS();
+            
+            // Проверка достижений
+            if (sessionClicks === 10 && !achievements.first100) {
+                unlockAchievement('Первая десятка', 'Сделано 10 кликов!', '🔟');
+                achievements.first100 = true;
+            } else if (sessionClicks === 100 && !achievements.casualPlayer) {
+                unlockAchievement('Кликер', 'Сделано 100 кликов!', '💯');
+                achievements.casualPlayer = true;
+            } else if (sessionClicks === 1000 && !achievements.clickMaster) {
+                unlockAchievement('Мастер клика', 'Сделано 1000 кликов!', '👑');
+                achievements.clickMaster = true;
+            }
+            
+            saveGame();
+            updateUI();
+        }
+
+        // Создание эффекта клика
+        function createClickEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.style.left = `${x - 15}px`;
+            effect.style.top = `${y - 15}px`;
+            document.body.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 600);
+        }
+
+        // Добавление/отнимание монет
+        function addCoins(amount) {
+            balance += amount;
+            totalEarned += amount;
+            
+            // Проверка достижений по балансу
+            if (balance >= 100 && !achievements.first100) {
+                unlockAchievement('Первая сотня', 'Заработано 100 KC!', '💵');
+                achievements.first100 = true;
+            }
+            if (balance >= 1000 && !achievements.first1000) {
+                unlockAchievement('Тысячник', 'Заработано 1000 KC!', '💰');
+                achievements.first1000 = true;
+            }
+            
+            updateUI();
+        }
+
+        // Покупка улучшения
+        function buyUpgrade(type) {
+            const item = shopItems[type];
+            
+            if (balance >= item.price) {
+                balance -= item.price;
+                playBuySound();
+                
+                switch (type) {
+                    case 'clickPower':
+                        item.level++;
+                        clickPower += item.increase;
+                        item.price = Math.floor(item.price * 1.5);
+                        break;
+                    case 'autoClicker':
+                        item.level++;
+                        autoClickerPower += item.increase;
+                        item.price = Math.floor(item.price * 1.8);
+                        if (autoClickerPower === item.increase) { // Первая покупка
+                            startAutoClicker();
+                            unlockAchievement('Автоматизация', 'Купили авто-кликер!', '⚙️');
+                            achievements.autoClicker = true;
+                        }
+                        break;
+                    case 'luck':
+                        item.level++;
+                        luckBonus += item.increase;
+                        item.price = Math.floor(item.price * 1.6);
+                        break;
+                    case 'clickerSpeed':
+                        item.level++;
+                        stopAutoClicker();
+                        startAutoClicker();
+                        item.price = Math.floor(item.price * 2);
+                        break;
+                }
+                
+                // Проверка достижений по покупкам
+                let totalUpgrades = 0;
+                for (const key in shopItems) {
+                    if (key !== 'extraAttempts') {
+                        totalUpgrades += shopItems[key].level;
+                    }
+                }
+                
+                if (totalUpgrades >= 5 && !achievements.shopaholic) {
+                    unlockAchievement('Шопоголик', 'Купили 5 улучшений!', '🛍️');
+                    achievements.shopaholic = true;
+                }
+                
+                saveGame();
+                updateUI();
+            }
+        }
+
+        // Покупка дополнительных попыток
+        function buyExtraAttempts() {
+            const item = shopItems.extraAttempts;
+            
+            if (balance >= item.price) {
+                balance -= item.price;
+                playBuySound();
+                
+                item.count++;
+                extraAttempts++;
+                diceAttempts++;
+                item.price = Math.floor(item.price * 1.4);
+                
+                saveGame();
+                updateUI();
+            }
+        }
+
+        // Запуск авто-кликера
+        function startAutoClicker() {
+            if (autoClickerInterval) {
+                clearInterval(autoClickerInterval);
+            }
+            
+            const speed = 1000 / shopItems.clickerSpeed.level;
+            autoClickerInterval = setInterval(() => {
+                if (autoClickerPower > 0) {
+                    addCoins(autoClickerPower);
+                    
+                    // Анимация авто-клика
+                    const hamster = document.getElementById('hamster');
+                    const rect = hamster.getBoundingClientRect();
+                    const randomX = rect.left + Math.random() * rect.width;
+                    const randomY = rect.top + Math.random() * rect.height;
+                    createClickEffect(randomX, randomY);
+                }
+            }, speed);
+        }
+
+        // Остановка авто-кликера
+        function stopAutoClicker() {
+            if (autoClickerInterval) {
+                clearInterval(autoClickerInterval);
+                autoClickerInterval = null;
+            }
+        }
+
+        // Игра в кубик
+        function rollDice() {
+            if (diceAttempts <= 0) {
+                alert('У вас закончились попытки!');
+                document.getElementById('rollDiceBtn').disabled = true;
+                return;
+            }
+            
+            playDiceSound();
+            diceAttempts--;
+            
+            // Имитация броска кубика
+            const diceResult = document.getElementById('diceResult');
+            diceResult.textContent = '...';
+            document.getElementById('rollDiceBtn').disabled = true;
+            
+            setTimeout(() => {
+                const min = 20;
+                const max = 40;
+                const randomExtra = Math.floor(Math.random() * luckBonus);
+                const result = Math.floor(Math.random() * (max - min + 1)) + min + randomExtra;
+                
+                diceResult.textContent = result;
+                addCoins(result);
+                
+                // Проверка достижений по кубику
+                if (result >= 50 && !achievements.diceMaster) {
+                    unlockAchievement('Мастер кубиков', 'Выиграли 50+ KC за бросок!', '🎲');
+                    achievements.diceMaster = true;
+                }
+                
+                playWinSound();
+                saveGame();
+                updateUI();
+                
+                if (diceAttempts > 0) {
+                    document.getElementById('rollDiceBtn').disabled = false;
+                }
+            }, 1500);
+        }
+
+        // Обновление интерфейса
+        function updateUI() {
+            // Баланс и клики
+            document.getElementById('balance').textContent = balance.toLocaleString();
+            document.getElementById('sessionClicks').textContent = sessionClicks;
+            document.getElementById('clicksPerSecond').textContent = clicksPerSecond;
+            document.getElementById('autoClickerPower').textContent = autoClickerPower;
+            
+            // Магазин
+            document.getElementById('clickPowerLevel').textContent = shopItems.clickPower.level;
+            document.getElementById('clickPowerPrice').textContent = shopItems.clickPower.price;
+            document.getElementById('autoClickerLevel').textContent = shopItems.autoClicker.level;
+            document.getElementById('autoClickerPrice').textContent = shopItems.autoClicker.price;
+            document.getElementById('luckLevel').textContent = shopItems.luck.level;
+            document.getElementById('luckPrice').textContent = shopItems.luck.price;
+            document.getElementById('clickerSpeedLevel').textContent = shopItems.clickerSpeed.level;
+            document.getElementById('clickerSpeedPrice').textContent = shopItems.clickerSpeed.price;
+            document.getElementById('extraAttemptsCount').textContent = shopItems.extraAttempts.count;
+            document.getElementById('extraAttemptsPrice').textContent = shopItems.extraAttempts.price;
+            
+            // Кубик
+            document.getElementById('diceAttempts').textContent = diceAttempts;
+            document.getElementById('rollDiceBtn').disabled = diceAttempts <= 0;
+            
+            // Кнопки магазина
+            document.getElementById('buyClickPowerBtn').disabled = balance < shopItems.clickPower.price;
+            document.getElementById('buyAutoClickerBtn').disabled = balance < shopItems.autoClicker.price;
+            document.getElementById('buyLuckBtn').disabled = balance < shopItems.luck.price;
+            document.getElementById('buyClickerSpeedBtn').disabled = balance < shopItems.clickerSpeed.price;
+            document.getElementById('buyExtraAttemptsBtn').disabled = balance < shopItems.extraAttempts.price;
+            
+            // Достижения
+            checkAchievements();
+        }
+
+        // Расчет кликов в секунду
+        function updateCPS() {
+            const now = Date.now();
+            clicksHistory = clicksHistory.filter(timestamp => now - timestamp < 1000);
+            clicksPerSecond = clicksHistory.length;
+            
+            document.getElementById('clicksPerSecond').textContent = clicksPerSecond;
+            
+            // Проверка достижения по скорости кликов
+            if (clicksPerSecond >= 5 && !achievements.fastClicker) {
+                unlockAchievement('Скорострел', '5 кликов в секунду!', '⚡');
+                achievements.fastClicker = true;
+            }
+        }
+
+        // Разблокировка достижения
+        function unlockAchievement(title, description, icon) {
+            const container = document.getElementById('achievementsContainer');
+            
+            const achievement = document.createElement('div');
+            achievement.className = 'achievement-badge bg-blue-800 bg-opacity-70 p-2 rounded-lg flex items-center';
+            achievement.innerHTML = `
+                <div class="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center mr-2">
+                    <span>${icon}</span>
+                </div>
+                <div>
+                    <p class="text-sm font-bold">${title}</p>
+                    <p class="text-xs text-blue-300">${description}</p>
+                </div>
+            `;
+            
+            container.appendChild(achievement);
+            
+            // Анимация
+            achievement.style.animation = 'achievementPop 0.5s ease-out';
+            setTimeout(() => {
+                achievement.style.animation = '';
+            }, 500);
+            
+            // Проверка на легендарное достижение
+            if (totalEarned >= 10000 && !achievements.legend) {
+                setTimeout(() => {
+                    unlockAchievement('Легенда', 'Заработано 10,000 KC!', '🌟');
+                    achievements.legend = true;
+                }, 1000);
+            }
+        }
+
+        // Проверка прогресса достижений
+        function checkAchievements() {
+            // Прогресс кликов
+            const clickProgress = Math.min(100, (sessionClicks / 10) * 100);
+            document.querySelector('.progress-fill').style.width = `${clickProgress}%`;
+        }
+
+        // Звуковые эффекты
+        function playClickSound() {
+            const sound = document.getElementById('clickSound');
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        function playBuySound() {
+            const sound = document.getElementById('buySound');
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        function playDiceSound() {
+            const sound = document.getElementById('diceSound');
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        function playWinSound() {
+            const sound = document.getElementById('winSound');
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        // Топ игроков (локальное хранилище)
+        function loadLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem('kirCoinLeaderboard')) || [];
+            displayLeaderboard(leaderboard);
+        }
+
+        function updateLeaderboard() {
+            let leaderboard = JSON.parse(localStorage.getItem('kirCoinLeaderboard')) || [];
+            
+            // Находим игрока в таблице лидеров
+            const playerIndex = leaderboard.findIndex(player => player.nickname === playerNickname);
+            
+            // Если игрок уже есть в таблице, обновляем его счет
+            if (playerIndex !== -1) {
+                leaderboard[playerIndex].balance = balance;
+                leaderboard[playerIndex].totalEarned = totalEarned;
+            } else {
+                // Иначе добавляем нового игрока
+                leaderboard.push({
+                    nickname: playerNickname,
+                    balance: balance,
+                    totalEarned: totalEarned
+                });
+            }
+            
+            // Сортируем по общему заработку
+            leaderboard.sort((a, b) => b.totalEarned - a.totalEarned);
+            
+            // Сохраняем обновленный топ
+            localStorage.setItem('kirCoinLeaderboard', JSON.stringify(leaderboard));
+            displayLeaderboard(leaderboard);
+        }
+
+        function displayLeaderboard(leaderboard) {
+            const container = document.getElementById('leaderboard');
+            container.innerHTML = '';
+            
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<div class="text-center py-4"><p class="text-blue-300">Пока никто не играл</p></div>';
+                return;
+            }
+            
+            leaderboard.slice(0, 10).forEach((player, index) => {
+                const playerElement = document.createElement('div');
+                playerElement.className = 'flex justify-between items-center py-2 px-3 border-b border-blue-800';
+                
+                // Определение позиции и цвета для топ-3 игроков
+                let positionClass = 'text-gray-300';
+                let positionText = `${index + 1}`;
+                
+                if (index === 0) {
+                    positionClass = 'text-yellow-400 font-bold';
+                    positionText = '🥇';
+                } else if (index === 1) {
+                    positionClass = 'text-gray-200 font-bold';
+                    positionText = '🥈';
+                } else if (index === 2) {
+                    positionClass = 'text-yellow-600 font-bold';
+                    positionText = '🥉';
+                }
+                
+                // Выделение текущего игрока
+                if (player.nickname === playerNickname) {
+                    playerElement.className += ' bg-blue-800 bg-opacity-50';
+                    document.getElementById('playerRank').textContent = index + 1;
+                }
+                
+                playerElement.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="w-6 text-center mr-2 ${positionClass}">${positionText}</span>
+                        <span class="${player.nickname === playerNickname ? 'font-bold text-yellow-300' : ''}">${player.nickname}</span>
+                    </div>
+                    <span class="text-yellow-400">${player.totalEarned.toLocaleString()} KC</span>
+                `;
+                
+                container.appendChild(playerElement);
+            });
+            
+            // Если игрок не в топ-10, показываем его позицию отдельно
+            const playerPosition = leaderboard.findIndex(player => player.nickname === playerNickname);
+            if (playerPosition >= 10) {
+                const player = leaderboard[playerPosition];
+                const playerElement = document.createElement('div');
+                playerElement.className = 'flex justify-between items-center py-2 px-3 mt-4 border-t border-blue-700 text-blue-300';
+                playerElement.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="w-6 text-center mr-2">${playerPosition + 1}</span>
+                        <span class="font-bold text-yellow-300">${player.nickname}</span>
+                    </div>
+                    <span class="text-yellow-400">${player.totalEarned.toLocaleString()} KC</span>
+                `;
+                container.appendChild(playerElement);
+            }
         }
     </script>
 </body>
